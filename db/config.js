@@ -21,6 +21,10 @@ const buildRelations = () => {
       Event.hasMany(Lecture, { as: 'Lectures' });
       Event.hasMany(Speaker, { as: 'Speakers' });
 
+      User.belongsTo(Event);
+      Lecture.belongsTo(Event);
+      Speaker.belongsTo(Event);
+
       Speaker.belongsTo(Speaker, {
         as: 'Assistant',
       });
@@ -112,31 +116,28 @@ const mockData = async () => {
 };
 
 
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log('-----------------------------'.gray);
-    console.log('** Connection has been established successfully.'.green);
-    return sequelize.sync({
-      force: true,
+export default () => {
+  sequelize
+    .authenticate()
+    .then(() => {
+      console.log('-----------------------------'.gray);
+      console.log('** Connection has been established successfully.'.green);
+      return buildRelations();
+    })
+    .then(() => {
+      console.log('** Relations built'.green);
+      return sequelize.sync({
+        force: true,
+      });
+    })
+    .then(() => {
+      console.log('** Models sync'.green);
+      console.log('-----------------------------'.gray);
+    })
+    .then(() => {
+      mockData();
+    })
+    .catch((err) => {
+      console.log(`** Unable to connect to the database: ${err.toString}`.red);
     });
-  })
-  .then(() => {
-    console.log('** Models sync'.green);
-    return buildRelations();
-  })
-  .then(() => {
-    return sequelize.sync({
-      force: true,
-    });
-  })
-  .then(() => {
-    console.log('** Relations built'.green);
-    console.log('-----------------------------'.gray);
-  })
-  .then(() => {
-    mockData();
-  })
-  .catch((err) => {
-    console.log(`** Unable to connect to the database: ${err.toString}`.red);
-  });
+};
