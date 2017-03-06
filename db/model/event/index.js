@@ -10,14 +10,5 @@ const Event = sequelize.define('event', {
   },
 });
 
-export const sync = () => {
-  return Event.sync({ force: true })
-    .then(() => {
-      return Event.create({
-        name: 'Event 101',
-      });
-    });
-};
-
 
 export default Event;

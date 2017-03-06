@@ -5,10 +5,15 @@ import Speaker from '../../db/model/speaker';
 
 export default {
   Query: {
-    lecture: (_, args) =>
-      Lecture.findOne({
+    lecture: (_, args, x, y) => {
+      console.log(_);
+      console.log(args);
+      console.log(x);
+      console.log(y);
+      return Lecture.findOne({
         where: args,
-      }),
+      });
+    },
     allLectures: () =>
       Lecture.findAll(),
     user: (_, args) =>

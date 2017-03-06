@@ -14,16 +14,4 @@ const Speaker = sequelize.define('speaker', {
   },
 });
 
-
-export const sync = () => {
-  return Speaker.sync({ force: true })
-    .then(() => {
-      return Speaker.create({
-        name: 'Bill Gates',
-        companyName: 'Microsoft',
-      });
-    });
-};
-
-
 export default Speaker;

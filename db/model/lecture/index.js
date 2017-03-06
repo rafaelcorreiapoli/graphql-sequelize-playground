@@ -15,18 +15,5 @@ const Lecture = sequelize.define('lecture', {
   },
 });
 
-export const sync = () => {
-  return Lecture.sync({ force: true })
-    .then(() => {
-      const now = moment();
-      const someDaysFromNow = moment().add(5, 'day');
-
-      return Lecture.create({
-        name: 'Lecture 101',
-        startDate: now,
-        endDate: someDaysFromNow,
-      });
-    });
-};
 
 export default Lecture;

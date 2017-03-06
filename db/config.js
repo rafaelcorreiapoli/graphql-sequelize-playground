@@ -11,21 +11,21 @@ console.logWithTab = (x, n = 1) => console.log(`${' '.repeat(n)}${x}`);
 const buildRelations = () => {
   return new Promise((resolve, reject) => {
     try {
-      Lecture.belongsToMany(Speaker, {
+      Lecture.Speakers = Lecture.belongsToMany(Speaker, {
         through: 'lectureSpeaker',
       });
-      Speaker.belongsToMany(Lecture, {
+      Speaker.Lectures = Speaker.belongsToMany(Lecture, {
         through: 'lectureSpeaker',
       });
-      Event.hasMany(User, { as: 'Users' });
-      Event.hasMany(Lecture, { as: 'Lectures' });
-      Event.hasMany(Speaker, { as: 'Speakers' });
+      Event.Users = Event.hasMany(User, { as: 'Users' });
+      Event.Lectures = Event.hasMany(Lecture, { as: 'Lectures' });
+      Event.Speakers = Event.hasMany(Speaker, { as: 'Speakers' });
 
-      User.belongsTo(Event);
-      Lecture.belongsTo(Event);
-      Speaker.belongsTo(Event);
+      User.Event = User.belongsTo(Event);
+      Lecture.Event = Lecture.belongsTo(Event);
+      Speaker.Event = Speaker.belongsTo(Event);
 
-      Speaker.belongsTo(Speaker, {
+      Speaker.Assistant = Speaker.belongsTo(Speaker, {
         as: 'Assistant',
       });
       resolve();
@@ -117,7 +117,7 @@ const mockData = async () => {
 
 
 export default () => {
-  sequelize
+  return sequelize
     .authenticate()
     .then(() => {
       console.log('-----------------------------'.gray);
