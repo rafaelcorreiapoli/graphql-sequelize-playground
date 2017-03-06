@@ -12,7 +12,15 @@ const main = () => {
     .then(() => {
       const app = express();
       const schema = getSchema();
-      app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }));
+      app.use('/graphql', bodyParser.json(), graphqlExpress({
+        schema,
+        context: {
+          user: {
+            name: 'Admin',
+            role: 'speaker',
+          },
+        },
+      }));
       app.use('/graphiql', graphiqlExpress({
         endpointURL: '/graphql',
       }));

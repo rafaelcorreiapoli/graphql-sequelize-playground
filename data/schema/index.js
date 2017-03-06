@@ -14,9 +14,6 @@ import Event from '../../db/model/event';
 import Lecture from '../../db/model/lecture';
 import Speaker from '../../db/model/speaker';
 import sequelize from '../../db/sequelize';
-// Event.Users = Event.hasMany(User, { as: 'Users' });
-// User.Event = User.belongsTo(Event);
-// Lecture.Event = Lecture.belongsTo(Event);
 
 const {
   sequelizeNodeInterface,
@@ -40,6 +37,35 @@ const getConnectionFieldsForModel = (Model) => {
     },
   };
 };
+
+
+const ensureLoggedIn = () => (fn) => (source, args, context, ast) => {
+  if (!context.user) {
+    throw new Error('Not authenticated');
+  }
+
+  return fn(source, args, context, ast);
+};
+
+const ensureRole = (roles) => (fn) => (source, args, context, ast) => {
+  if (!context.user) {
+    throw new Error('Not authenticated');
+  }
+
+  let rolesArray;
+  if (!Array.isArray(roles)) {
+    rolesArray = [roles];
+  } else {
+    rolesArray = roles;
+  }
+
+  if (!rolesArray.some(role => role === context.user.role)) {
+    throw new Error('Not authorized');
+  }
+  return fn(source, args, context, ast);
+};
+
+// const ensureRole = ensureLoggedIn()(ensureRoleOnly);
 
 const getOrderByForModel = (Model, name) =>
   new GraphQLEnumType({
@@ -200,7 +226,10 @@ export default () => {
         allEvents: {
           type: allEventsConnection.connectionType,
           args: allEventsConnection.connectionArgs,
-          resolve: allEventsConnection.resolve,
+          resolve: ensureRole([
+            'admin',
+            'speaker',
+          ])(allEventsConnection.resolve),
         },
         allSpeakers: {
           type: allSpeakersConnection.connectionType,
