@@ -39,8 +39,13 @@ const mockData = async () => {
   const user1 = await User.create({
     firstName: 'Rafael',
     lastName: 'Ribeiro Correia',
+    age: 10,
   });
-
+  const user2 = await User.create({
+    firstName: 'João',
+    lastName: 'da Silva',
+    age: 12,
+  });
   const lecture1 = await Lecture.create({
     name: 'Microsoft is bad',
   });
@@ -59,60 +64,18 @@ const mockData = async () => {
     name: 'OS Event',
   });
 
+  const event2 = await Event.create({
+    name: 'Drone Event',
+  });
 
   await event1.addUser(user1);
+  await event1.addUser(user2);
   await event1.addSpeaker(speaker1);
   await event1.addSpeaker(speaker2);
   await event1.addLecture(lecture1);
 
   await speaker1.addLecture(lecture1);
   await speaker1.setAssistant(speaker2);
-
-  const querySpeaker1 = await Speaker.findOne({
-    where: {
-      name: 'Bill Gates',
-    },
-  });
-
-  console.log(querySpeaker1.nameWithCompany);
-  const querySpeaker1Lectures = await querySpeaker1.getLectures();
-  const querySpeaker1Assistant = await querySpeaker1.getAssistant();
-
-  console.log('Lectures'.gray);
-  querySpeaker1Lectures.forEach(lecture => {
-    console.log(lecture.name);
-  });
-
-  console.log('Assistant'.gray);
-  console.log(querySpeaker1Assistant.nameWithCompany);
-
-  const queryEvent1 = await Event.findOne({
-    where: {
-      name: 'OS Event',
-    },
-  });
-
-
-  console.log('----------'.gray);
-
-  console.log(queryEvent1.name);
-  const queryEvent1Speakers = await queryEvent1.getSpeakers();
-  console.log('Speakers'.gray);
-  queryEvent1Speakers.forEach(speaker => {
-    console.logWithTab(speaker.nameWithCompany);
-  });
-
-  const queryEvent1Lectures = await queryEvent1.getLectures();
-  console.log('Lectures'.gray);
-  queryEvent1Lectures.forEach(lecture => {
-    console.logWithTab(lecture.name);
-  });
-
-  const queryEvent1Users = await queryEvent1.getUsers();
-  console.log('Users'.gray);
-  queryEvent1Users.forEach(user => {
-    console.logWithTab(user.firstName);
-  });
 };
 
 
@@ -132,10 +95,11 @@ export default () => {
     })
     .then(() => {
       console.log('** Models sync'.green);
-      console.log('-----------------------------'.gray);
+      mockData();
     })
     .then(() => {
-      mockData();
+      console.log('** Data mocked'.green);
+      console.log('-----------------------------'.gray);
     })
     .catch((err) => {
       console.log(`** Unable to connect to the database: ${err.toString}`.red);

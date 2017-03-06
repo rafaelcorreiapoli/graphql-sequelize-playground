@@ -8,6 +8,9 @@ const User = sequelize.define('user', {
   lastName: {
     type: Sequelize.STRING,
   },
+  age: {
+    type: Sequelize.INTEGER,
+  },
 });
 
 export default User;

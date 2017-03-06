@@ -3,6 +3,7 @@ import { graphqlExpress, graphiqlExpress } from 'graphql-server-express';
 import bodyParser from 'body-parser';
 import configDb from './db/config';
 import getSchema from './data/schema';
+import User from './db/model/user';
 
 const GRAPHQL_PORT = 8080;
 
