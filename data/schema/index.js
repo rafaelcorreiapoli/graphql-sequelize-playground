@@ -8,7 +8,8 @@ import {
   GraphQLEnumType,
 } from 'graphql';
 import { resolver, attributeFields, relay, defaultArgs } from 'graphql-sequelize';
-import { globalIdField } from 'graphql-relay';
+import { globalIdField, mutationWithClientMutationId } from 'graphql-relay';
+import { generateToken } from '../../src/auth';
 import User from '../../db/model/user';
 import Event from '../../db/model/event';
 import Lecture from '../../db/model/lecture';
@@ -41,7 +42,8 @@ const getConnectionFieldsForModel = (Model) => {
 
 const ensureLoggedIn = () => (fn) => (source, args, context, ast) => {
   if (!context.user) {
-    throw new Error('Not authenticated');
+    return null;
+    // throw new Error('Not authenticated');
   }
 
   return fn(source, args, context, ast);
@@ -49,7 +51,8 @@ const ensureLoggedIn = () => (fn) => (source, args, context, ast) => {
 
 const ensureRole = (roles) => (fn) => (source, args, context, ast) => {
   if (!context.user) {
-    throw new Error('Not authenticated');
+    return null;
+    // throw new Error('Not authenticated');
   }
 
   let rolesArray;
@@ -60,12 +63,11 @@ const ensureRole = (roles) => (fn) => (source, args, context, ast) => {
   }
 
   if (!rolesArray.some(role => role === context.user.role)) {
-    throw new Error('Not authorized');
+    return null;
+    // throw new Error('Not authorized');
   }
   return fn(source, args, context, ast);
 };
-
-// const ensureRole = ensureLoggedIn()(ensureRoleOnly);
 
 const getOrderByForModel = (Model, name) =>
   new GraphQLEnumType({
@@ -122,7 +124,7 @@ export default () => {
       },
       speakers: {
         type: new GraphQLList(speakerType),
-        resolve: resolver(Lecture.Speakers),
+        resolve: (source) => source.getSpeakers(),
       },
     }),
     interfaces: [nodeInterface],
@@ -160,6 +162,19 @@ export default () => {
     description: 'A user',
     fields: () => ({
       ...userFields,
+      _id: {
+        type: GraphQLInt,
+        resolve: user => user.id,
+      },
+      // lastName: {
+      //   type: GraphQLString,
+      //   resolve: ensureRole(['admin', 'speaker'])((user, args, context) => {
+      //     if (context.user.id === user.id) {
+      //       return user.lastName;
+      //     }
+      //     return null;
+      //   }),
+      // },
       id: globalIdField(User.name),
       event: {
         type: eventType,
@@ -218,7 +233,71 @@ export default () => {
     connectionFields: getConnectionFieldsForModel(Speaker),
   });
 
+
+  //  Mutations
+
+  const LoginWithEmail = mutationWithClientMutationId({
+    name: 'LoginWithEmail',
+    inputFields: () => ({
+      email: {
+        type: new GraphQLNonNull(GraphQLString),
+      },
+      password: {
+        type: new GraphQLNonNull(GraphQLString),
+      },
+    }),
+    mutateAndGetPayload: async ({ email, password }) => {
+      const user = await User.findOne({
+        where: {
+          email: email.toLowerCase(),
+        },
+      });
+
+      if (!user) {
+        return {
+          token: null,
+          error: 'INVALID_EMAIL',
+        };
+      }
+
+      const correctPassword = user.validPassword(password);
+
+      if (!correctPassword) {
+        return {
+          token: null,
+          error: 'INVALID_PASSWORD',
+        };
+      }
+
+      return {
+        token: generateToken(user),
+        error: null,
+        user,
+      };
+    },
+    outputFields: {
+      token: {
+        type: GraphQLString,
+        resolve: ({ token }) => token,
+      },
+      error: {
+        type: GraphQLString,
+        resolve: ({ error }) => error,
+      },
+      user: {
+        type: userType,
+      },
+    },
+  });
+
+
   return new GraphQLSchema({
+    mutation: new GraphQLObjectType({
+      name: 'Mutation',
+      fields: () => ({
+        LoginWithEmail,
+      }),
+    }),
     query: new GraphQLObjectType({
       name: 'RootQueryType',
       fields: () => ({

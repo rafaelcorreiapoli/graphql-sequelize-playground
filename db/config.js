@@ -39,15 +39,33 @@ const mockData = async () => {
   const user1 = await User.create({
     firstName: 'Rafael',
     lastName: 'Ribeiro Correia',
+    email: 'rafa@rafa.com',
+    password: 'q1w2e3',
     age: 10,
+    role: 'admin',
   });
   const user2 = await User.create({
     firstName: 'João',
     lastName: 'da Silva',
+    email: 'joao@joao.com',
+    password: 'q1w2e3',
     age: 12,
+    role: 'speaker',
+  });
+  const user3 = await User.create({
+    firstName: 'Daniel',
+    lastName: 'Oliveira',
+    email: 'daniel@daniel.com',
+    password: 'q1w2e3',
+    age: 12,
+    role: 'speaker',
   });
   const lecture1 = await Lecture.create({
     name: 'Microsoft is bad',
+  });
+
+  const lecture2 = await Lecture.create({
+    name: 'Apple is good',
   });
 
   const speaker1 = await Speaker.create({
@@ -60,6 +78,11 @@ const mockData = async () => {
     companyName: 'Microsoft',
   });
 
+  const speaker3 = await Speaker.create({
+    name: 'Steve Jobs',
+    companyName: 'Apple',
+  });
+
   const event1 = await Event.create({
     name: 'OS Event',
   });
@@ -68,13 +91,20 @@ const mockData = async () => {
     name: 'Drone Event',
   });
 
+  console.log('aaaaa');
+  await event2.addUser(user3);
   await event1.addUser(user1);
   await event1.addUser(user2);
+  await event1.addUser(user3);
   await event1.addSpeaker(speaker1);
   await event1.addSpeaker(speaker2);
   await event1.addLecture(lecture1);
+  await event1.addLecture(lecture2);
 
+  await speaker3.addLecture(lecture2);
+  await speaker2.addLecture(lecture1);
   await speaker1.addLecture(lecture1);
+  await speaker2.addLecture(lecture2);
   await speaker1.setAssistant(speaker2);
 };
 
@@ -82,6 +112,12 @@ const mockData = async () => {
 export default () => {
   return sequelize
     .authenticate()
+    .then(() => {
+      console.log('** Relations built'.green);
+      return sequelize.sync({
+        force: true,
+      });
+    })
     .then(() => {
       console.log('-----------------------------'.gray);
       console.log('** Connection has been established successfully.'.green);
